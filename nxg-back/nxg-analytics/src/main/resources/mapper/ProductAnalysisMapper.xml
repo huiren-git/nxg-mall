@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.nxg.mall.analytics.mapper.ProductAnalysisMapper">
+
+    <!-- 1. 获取时段内的库存总价值（避开多天累加陷阱，取 endDate 当天时点值） -->
+    <select id="getTotalInventoryValue" resultType="java.math.BigDecimal">
+        SELECT COALESCE(SUM(stock * price), 0)
+        FROM ads_product_analysis
+        <where>
+            <choose>
+                <when test="endDate != null">
+                    <!-- 🌟 使用 DATE() 提取字段的日期部分进行比较 -->
+                    DATE(dt) = #{endDate}
+                </when>
+                <otherwise>
+                    dt = (SELECT MAX(dt) FROM ads_product_analysis)
+                </otherwise>
+            </choose>
+        </where>
+    </select>
+
+    <!-- 2. 获取时段内的各品类销量贡献（按品类分组聚合累计销量） -->
+    <select id="getCategorySalesVolume" resultType="java.util.Map">
+        SELECT
+        category AS name,
+        SUM(sales_volume) AS value
+        FROM ads_product_analysis
+        <where>
+            <if test="startDate != null">
+                dt &gt;= #{startDate}
+            </if>
+            <if test="endDate != null">
+                AND dt &lt;= #{endDate}
+            </if>
+        </where>
+        GROUP BY category
+        ORDER BY value DESC
+    </select>
+
+</mapper>

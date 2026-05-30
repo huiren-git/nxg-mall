@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.nxg.mall.api.mapper.CouponMapper">
+
+    <select id="selectDeletedPage" resultType="com.nxg.mall.common.entity.Coupon">
+        SELECT * FROM t_coupon
+        <where>
+            is_deleted = 1
+            <if test="query.title != null and query.title != ''">
+                AND title LIKE CONCAT('%', #{query.title}, '%')
+            </if>
+            <if test="query.category != null">
+                AND category = #{query.category}
+            </if>
+        </where>
+        ORDER BY update_time DESC
+    </select>
+
+    <select id="selectCouponCenterPage" resultType="com.nxg.mall.common.vo.CouponVO">
+        SELECT
+        c.id,
+        c.title,
+        c.category,
+        c.type,
+        c.condition_amount,
+        c.discount_amount,
+        c.discount_rate,
+        c.total_count,
+        c.take_count,
+        c.start_time,
+        c.end_time,
+        c.status,
+        c.create_time,
+        IF(cu.id IS NULL, 0, 1) AS is_taken,
+        IF(c.take_count >= c.total_count, 1, 0) AS is_stock_out
+        FROM t_coupon c
+        LEFT JOIN t_coupon_user cu ON c.id = cu.coupon_id AND cu.user_id = #{userId}
+        <where>
+            c.is_deleted = 0
+            <if test="category != null">
+                AND c.category = #{category}
+            </if>
+            AND c.end_time > NOW()
+        </where>
+        ORDER BY c.create_time DESC
+    </select>
+
+    <resultMap id="UserCouponDetailMap" type="com.nxg.mall.api.service.bo.UserCouponDetailBO">
+        <id property="userCouponId" column="user_coupon_id"/>
+        <result property="userCouponStatus" column="user_coupon_status"/>
+        <result property="id" column="id"/>
+        <result property="title" column="title"/>
+        <result property="type" column="type"/>
+        <result property="conditionAmount" column="condition_amount"/>
+        <result property="discountAmount" column="discount_amount"/>
+        <result property="discountRate" column="discount_rate"/>
+        <result property="startTime" column="start_time"/>
+        <result property="endTime" column="end_time"/>
+        <result property="category" column="category"/>
+        <collection property="scopeTargetIds" ofType="java.lang.Long">
+            <result column="target_id"/>
+        </collection>
+    </resultMap>
+
+    <select id="selectUserAvailableCoupons" resultMap="UserCouponDetailMap">
+        SELECT
+        cu.id AS user_coupon_id,
+        cu.status AS user_coupon_status,
+        c.id,
+        c.title,
+        c.type,
+        c.condition_amount,
+        c.discount_amount,
+        c.discount_rate,
+        c.start_time,
+        c.end_time,
+        c.category,
+        cs.target_id
+        FROM t_coupon_user cu
+        INNER JOIN t_coupon c ON cu.coupon_id = c.id
+        LEFT JOIN t_coupon_scope cs ON c.id = cs.coupon_id
+        <where>
+            cu.user_id = #{userId}
+            AND cu.status = 1
+            AND c.status = 1
+            AND c.is_deleted = 0
+            AND NOW() BETWEEN c.start_time AND c.end_time
+        </where>
+        ORDER BY c.condition_amount DESC, c.create_time DESC
+    </select>
+</mapper>

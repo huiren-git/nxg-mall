@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+</head>
+<body>
+<div style="max-width: 600px; border: 1px solid #ddd; padding: 20px;">
+    <h2 style="color: #ff4d4f;">订单取消通知</h2>
+    <p>尊敬的 <strong th:text="${nickname}">用户</strong>，您好：</p>
+    <p>很抱歉地通知您，您的订单 <strong th:text="${orderNo}">ORDER_123</strong> 已被取消。</p>
+    <p><strong>取消原因：</strong><span th:text="${reason}">库存不足</span></p>
+    <p>如果您已支付款项，资金将按原路退回至您的账户。如有疑问，请联系商城客服。</p>
+</div>
+</body>
+</html>

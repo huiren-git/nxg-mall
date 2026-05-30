@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.nxg.mall.analytics.mapper.DailySummaryMapper">
+
+    <insert id="calculateAndSaveDailySummary">
+        INSERT INTO t_daily_summary (
+            stat_date, uv, pv, new_users, total_revenue, order_count,
+            trade_users, recharge_users, recharge_amount, discount_amount
+        )
+        SELECT
+            #{targetDate} AS stat_date,
+
+            -- 1. 统计 UV 和 PV (利用范围查询代替 DATE() 函数，完美走时间索引)
+            (SELECT COUNT(DISTINCT COALESCE(user_id, client_ip))
+             FROM t_user_browse_log
+             WHERE enter_time &gt;= CONCAT(#{targetDate}, ' 00:00:00')
+               AND enter_time &lt;= CONCAT(#{targetDate}, ' 23:59:59')) AS uv,
+
+            (SELECT COUNT(1)
+             FROM t_user_browse_log
+             WHERE enter_time &gt;= CONCAT(#{targetDate}, ' 00:00:00')
+               AND enter_time &lt;= CONCAT(#{targetDate}, ' 23:59:59')) AS pv,
+
+            -- 2. 统计新增用户
+            (SELECT COUNT(1)
+             FROM dwd_user_register_log
+             WHERE event_time &gt;= CONCAT(#{targetDate}, ' 00:00:00')
+               AND event_time &lt;= CONCAT(#{targetDate}, ' 23:59:59')) AS new_users,
+
+            -- 3. 统计交易相关指标
+            (SELECT IFNULL(SUM(amount), 0)
+             FROM dwd_trade_log
+             WHERE event_time &gt;= CONCAT(#{targetDate}, ' 00:00:00')
+               AND event_time &lt;= CONCAT(#{targetDate}, ' 23:59:59')
+               AND type = 'PAY_SUCCESS') AS total_revenue,
+
+            (SELECT COUNT(1)
+             FROM dwd_trade_log
+             WHERE event_time &gt;= CONCAT(#{targetDate}, ' 00:00:00')
+               AND event_time &lt;= CONCAT(#{targetDate}, ' 23:59:59')
+               AND type = 'PAY_SUCCESS') AS order_count,
+
+            (SELECT COUNT(DISTINCT user_id)
+             FROM dwd_trade_log
+             WHERE event_time &gt;= CONCAT(#{targetDate}, ' 00:00:00')
+               AND event_time &lt;= CONCAT(#{targetDate}, ' 23:59:59')
+               AND type = 'PAY_SUCCESS') AS trade_users,
+
+            (SELECT IFNULL(SUM(discount_amount), 0)
+             FROM dwd_trade_log
+             WHERE event_time &gt;= CONCAT(#{targetDate}, ' 00:00:00')
+               AND event_time &lt;= CONCAT(#{targetDate}, ' 23:59:59')
+               AND type = 'PAY_SUCCESS') AS discount_amount,
+
+            -- 4. 统计充值相关指标
+            (SELECT COUNT(DISTINCT user_id)
+             FROM dwd_recharge_log
+             WHERE event_time &gt;= CONCAT(#{targetDate}, ' 00:00:00')
+               AND event_time &lt;= CONCAT(#{targetDate}, ' 23:59:59')) AS recharge_users,
+
+            (SELECT IFNULL(SUM(amount), 0)
+             FROM dwd_recharge_log
+             WHERE event_time &gt;= CONCAT(#{targetDate}, ' 00:00:00')
+               AND event_time &lt;= CONCAT(#{targetDate}, ' 23:59:59')) AS recharge_amount
+
+        ON DUPLICATE KEY UPDATE
+                             uv = VALUES(uv),
+                             pv = VALUES(pv),
+                             new_users = VALUES(new_users),
+                             total_revenue = VALUES(total_revenue),
+                             order_count = VALUES(order_count),
+                             trade_users = VALUES(trade_users),
+                             recharge_users = VALUES(recharge_users),
+                             recharge_amount = VALUES(recharge_amount),
+                             discount_amount = VALUES(discount_amount);
+    </insert>
+
+</mapper>

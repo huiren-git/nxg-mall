@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.nxg.mall.analytics.mapper.UserInsightMapper">
+
+    <!-- 1. 核心大盘指标卡片统计 -->
+    <select id="getGlobalMetrics" resultType="java.util.Map">
+        SELECT
+            COUNT(DISTINCT user_id) as totalActiveUsers,
+            SUM(CASE WHEN total_spent > 1000 OR order_count > 5 THEN 1 ELSE 0 END) as corePaidUsers,
+            COALESCE(ROUND(SUM(total_spent) / SUM(CASE WHEN order_count > 0 THEN 1 ELSE 0 END), 2), 0) as avgCustomerValue,
+            COALESCE(ROUND(SUM(CASE WHEN order_count > 1 THEN 1 ELSE 0 END) / SUM(CASE WHEN order_count > 0 THEN 1 ELSE 0 END) * 100, 2), 0) as repurchaseRate
+        FROM t_user_portrait
+    </select>
+
+    <!-- 2. 地理分布 Top 5 -->
+    <select id="getGeoDistribution" resultType="java.util.Map">
+        SELECT
+            province as name,
+            COUNT(user_id) as value
+        FROM t_user_portrait
+        WHERE province IS NOT NULL
+        GROUP BY province
+        ORDER BY value DESC
+        LIMIT 5
+    </select>
+
+    <!-- 3. 消费品类偏好 -->
+    <select id="getConsumptionPreference" resultType="java.util.Map">
+        SELECT
+            favorite_category as name,
+            COUNT(user_id) as value
+        FROM t_user_portrait
+        WHERE favorite_category IS NOT NULL
+        GROUP BY favorite_category
+    </select>
+
+    <!-- 4. 购买力区间分布 -->
+    <select id="getPurchasePowerDistribution" resultType="java.util.Map">
+        SELECT
+            CASE
+                WHEN total_spent >= 5000 THEN '高购买力 (王者)'
+                WHEN total_spent >= 1000 AND total_spent &lt; 5000 THEN '中购买力 (黄金)'
+                ELSE '普通用户 (青铜)'
+                END as name,
+            COUNT(user_id) as value
+        FROM t_user_portrait
+        GROUP BY
+            CASE
+                WHEN total_spent >= 5000 THEN '高购买力 (王者)'
+                WHEN total_spent >= 1000 AND total_spent &lt; 5000 THEN '中购买力 (黄金)'
+                ELSE '普通用户 (青铜)'
+                END
+    </select>
+</mapper>

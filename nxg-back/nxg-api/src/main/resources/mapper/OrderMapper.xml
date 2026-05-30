@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.nxg.mall.api.mapper.OrderMapper">
+
+    <resultMap id="OrderVOMap" type="com.nxg.mall.common.vo.OrderVO">
+        <id property="id" column="order_id"/>
+        <result property="orderNo" column="order_no"/>
+        <result property="totalAmount" column="total_amount"/>
+        <result property="payAmount" column="pay_amount"/>
+        <result property="payType" column="pay_type"/>
+        <result property="status" column="status"/>
+        <result property="receiverName" column="receiver_name"/>
+        <result property="receiverPhone" column="receiver_phone"/>
+        <result property="receiverAddress" column="receiver_address"/>
+        <result property="createTime" column="create_time"/>
+
+        <collection property="orderItems" ofType="com.nxg.mall.common.vo.OrderItemVO">
+            <id property="id" column="item_id"/>
+            <result property="productId" column="product_id"/>
+            <result property="skuId" column="sku_id"/>
+            <result property="productName" column="product_name"/>
+            <result property="specs" column="specs"/>
+            <result property="productPic" column="product_pic"/>
+            <result property="price" column="price"/>
+            <result property="quantity" column="quantity"/>
+        </collection>
+    </resultMap>
+
+    <select id="selectUserOrderList" resultMap="OrderVOMap">
+        SELECT
+        o.id AS order_id,
+        o.order_no,
+        o.total_amount,
+        o.pay_amount,
+        o.pay_type,
+        o.status,
+        o.receiver_name,
+        o.receiver_phone,
+        o.receiver_address,
+        o.create_time,
+
+        i.id AS item_id,
+        i.product_id,
+        i.sku_id,
+        i.product_name,
+        i.specs,
+        i.product_pic,
+        i.price,
+        i.quantity
+        FROM t_order o
+        LEFT JOIN t_order_item i ON o.order_no = i.order_no
+        <where>
+            o.is_deleted = 0
+            <if test="userId != null">
+                AND o.user_id = #{userId}
+            </if>
+
+            <!-- 修改这里的状态逻辑 -->
+            <if test="statusList != null and statusList.size() > 0">
+                AND o.status IN
+                <foreach collection="statusList" item="s" open="(" separator="," close=")">
+                    #{s}
+                </foreach>
+            </if>
+        </where>
+        ORDER BY o.create_time DESC
+    </select>
+
+    <select id="selectPurchaseLogs" resultType="com.nxg.mall.api.vo.PurchaseLogVO">
+        SELECT
+            item.id AS id,
+            oi.order_no AS orderNo,
+            oi.user_id AS userId,
+            item.product_name AS productName, -- 你的明细表本身带有商品名，直接用
+            item.product_pic AS productImage,
+
+            c.name AS category,
+
+            item.price AS unitPrice,
+            item.quantity AS quantity,
+            oi.status AS status,
+            oi.pay_time AS purchaseTime
+        FROM t_order_item item
+                 INNER JOIN t_order oi ON item.order_no = oi.order_no
+
+                 LEFT JOIN t_product p ON item.product_id = p.id
+
+                 LEFT JOIN t_category c ON p.category_id = c.id
+
+        WHERE oi.user_id = #{userId}
+          AND oi.is_deleted = 0
+          AND oi.status IN (1, 3, 4)
+        ORDER BY oi.pay_time DESC
+    </select>
+
+</mapper>

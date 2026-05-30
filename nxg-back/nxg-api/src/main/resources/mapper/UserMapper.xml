@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.nxg.mall.api.mapper.UserMapper">
+
+    <select id="selectManagePage" resultType="com.nxg.mall.common.vo.ManageVO">
+        SELECT
+        u.id,
+        u.username,
+        u.nickname,
+        u.email,
+        CASE u.role
+            WHEN 1 THEN 'SALES'
+            WHEN 2 THEN 'ADMIN'
+            ELSE 'UNKNOWN'
+        END as role,
+        u.create_time,
+        us.last_login_time,
+        us.last_login_ip
+        FROM t_user u
+        LEFT JOIN t_user_status us ON u.id = us.user_id
+        <where>
+            <if test="role != null">
+                AND u.role = #{role}
+            </if>
+            <if test="role == null">
+                AND u.role IN (1, 2)
+            </if>
+            <if test="name != null and name != ''">
+                AND (u.nickname LIKE CONCAT('%', #{name}, '%')
+                OR u.username LIKE CONCAT('%', #{name}, '%'))
+            </if>
+        </where>
+        ORDER BY u.create_time DESC
+    </select>
+
+</mapper>

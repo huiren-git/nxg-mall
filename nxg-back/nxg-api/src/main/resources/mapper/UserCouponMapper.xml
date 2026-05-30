@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.nxg.mall.api.mapper.CouponUserMapper">
+
+    <select id="selectUserCouponList" resultType="com.nxg.mall.common.vo.CouponUserVO">
+        SELECT
+        cu.id,
+        cu.status,
+        cu.create_time,
+        c.id AS coupon_id,
+        c.title,
+        c.type,
+        c.condition_amount,
+        c.discount_amount,
+        c.discount_rate,
+        c.start_time,
+        c.end_time
+        FROM t_coupon_user cu
+        INNER JOIN t_coupon c ON cu.coupon_id = c.id
+        <where>
+            <!-- 基础过滤：指定用户 -->
+            cu.user_id = #{userId}
+
+            <!-- 动态过滤：优惠券状态 (1-未使用, 2-已使用, 3-已过期) -->
+            <if test="status != null">
+                AND cu.status = #{status}
+            </if>
+
+            <!-- 排除被逻辑删除的优惠券模板 -->
+            AND c.is_deleted = 0
+        </where>
+        <!-- 排序：按领取时间倒序排列 -->
+        ORDER BY cu.create_time DESC
+    </select>
+
+</mapper>

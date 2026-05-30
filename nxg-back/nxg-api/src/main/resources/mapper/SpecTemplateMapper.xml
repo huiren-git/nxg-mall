@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.nxg.mall.api.mapper.SpecTemplateMapper">
+
+    <resultMap id="SpecTemplateMap" type="com.nxg.mall.common.vo.SpecTemplateVO">
+
+        <id property="id" column="t_id"/>
+        <result property="templateName" column="template_name"/>
+        <result property="categoryId" column="category_id"/>
+        <result property="categoryName" column="category_name"/>
+
+        <collection property="specKeys" ofType="com.nxg.mall.common.vo.SpecTemplateVO$SpecKeyVO">
+            <id property="id" column="key_id"/>
+            <result property="attrName" column="attr_name"/>
+
+            <collection property="attrValues" ofType="com.nxg.mall.common.vo.SpecTemplateVO$SpecValueVO">
+                <id property="id" column="val_id"/>
+                <result property="attrValue" column="attr_value"/>
+            </collection>
+        </collection>
+    </resultMap>
+
+    <select id="selectComplexList" resultMap="SpecTemplateMap">
+        SELECT
+        t.id AS t_id,
+        t.template_name,
+        t.category_id,
+        c.name AS category_name,
+        k.id AS key_id,
+        k.attr_name,
+        v.id AS val_id,
+        v.attr_value
+        FROM t_spec_template t
+        LEFT JOIN t_category c ON t.category_id = c.id AND c.is_deleted = 0
+        LEFT JOIN t_attribute_key k ON t.id = k.template_id AND k.is_deleted = 0
+        LEFT JOIN t_attribute_value v ON k.id = v.attr_key_id AND v.is_deleted = 0
+        <where>
+            t.is_deleted = 0
+            <if test="name != null and name != ''">
+                AND t.template_name LIKE CONCAT('%', #{name}, '%')
+            </if>
+        </where>
+        ORDER BY t.id DESC, k.id ASC, v.id ASC
+    </select>
+
+</mapper>

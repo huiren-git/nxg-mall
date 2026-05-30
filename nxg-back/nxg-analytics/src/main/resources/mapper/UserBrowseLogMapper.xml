@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.nxg.mall.analytics.mapper.UserBrowseLogMapper">
+
+    <select id="selectBrowseLogPage" resultType="com.nxg.mall.common.vo.BrowseLogSalesVO">
+        SELECT
+            l.id,
+            l.product_id AS productId,
+            p.name AS productName,
+            p.main_image AS productImage,
+            l.enter_time AS enterTime,
+            l.leave_time AS leaveTime,
+            l.duration,
+            l.client_ip AS clientIp,
+            l.terminal,
+            l.source_type AS sourceType
+        FROM
+            t_user_browse_log l
+                LEFT JOIN
+            nxg.t_product p ON l.product_id = p.id
+        WHERE
+            l.user_id = #{userId}
+        ORDER BY
+            l.enter_time DESC
+    </select>
+
+    <select id="selectUserBrowseLogPage" resultType="com.nxg.mall.common.vo.BrowseLogVO">
+        SELECT
+            l.id,
+            l.product_id AS productId,
+            p.name AS productName,
+            p.main_image AS productPic,
+            p.price AS price,
+            l.enter_time AS enterTime,
+            l.duration
+        FROM
+            nxg_analytics.t_user_browse_log l
+                LEFT JOIN
+            nxg.t_product p ON l.product_id = p.id
+        WHERE
+            l.user_id = #{userId}
+        ORDER BY
+            l.enter_time DESC
+    </select>
+
+</mapper>

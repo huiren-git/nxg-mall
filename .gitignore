@@ -1,0 +1,57 @@
+# ==========================================
+# 1. 全局系统与 IDE 工具过滤
+# ==========================================
+.idea/
+.vscode/
+.cursor/
+*.iml
+.DS_Store
+Thumbs.db
+
+# 本地临时测试文件夹（不放入版本控制）
+测试/
+
+# ==========================================
+# 2. 后端项目过滤 (nxg-back)
+# ==========================================
+# 过滤根模块及所有子模块（api, analytics, common）的 target 编译输出目录
+nxg-back/target/
+nxg-back/**/target/
+
+# 🚨 极度重要：过滤本地上传的图片/文件物理目录，防止本地测试上传的文件污染远程仓库
+nxg-back/uploads/
+
+# 过滤运行日志
+nxg-back/*.log
+nxg-back/**/*.log
+nxg-back/.dbg/
+
+# ==========================================
+# 3. 前端项目过滤 (nxg-front)
+# ==========================================
+# 过滤前端依赖包（体积巨大，绝对不能传）
+nxg-front/node_modules/
+
+# 过滤前端打包产物
+nxg-front/build/
+nxg-front/dist/
+
+# 过滤前端本地开发日志与环境配置文件
+nxg-front/*.log
+nxg-front/npm-debug.log*
+nxg-front/yarn-debug.log*
+nxg-front/yarn-error.log*
+nxg-front/.env.local
+nxg-front/.env.*.local
+
+# 过滤前端本地缓存
+nxg-front/.eslintcache
+nxg-front/.stylelintcache
+
+# ==========================================
+# 4. 敏感配置文件屏蔽 (保护数据库、Redis、Kafka 密保)
+# ==========================================
+# 屏蔽 nxg-back 下所有子模块 resources 目录中的 application.yml/properties 及其各种环境变体
+nxg-back/**/src/main/resources/application*.yml
+nxg-back/**/src/main/resources/application*.yaml
+nxg-back/**/src/main/resources/application*.properties

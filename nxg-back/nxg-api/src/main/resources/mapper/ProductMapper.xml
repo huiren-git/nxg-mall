@@ -1,0 +1,179 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.nxg.mall.api.mapper.ProductMapper">
+
+    <select id="selectProductVOByCouponScope" resultType="com.nxg.mall.common.vo.ProductListVO">
+        SELECT
+        p.id,
+        p.name,
+        p.category_id,
+        p.price,
+        p.status,
+        p.main_image,
+        p.sales_count,
+        p.sort_order AS sortId,
+        p.stock,
+        p.create_time
+        FROM t_product p
+        WHERE p.is_deleted = 0
+        AND p.status = 1
+
+        AND EXISTS (
+        SELECT 1 FROM t_coupon c
+        WHERE c.id = #{couponId}
+        AND c.is_deleted = 0
+        AND (
+        c.category = 1
+
+        OR (
+        c.category = 2 AND EXISTS (
+        SELECT 1 FROM t_coupon_scope cs
+        WHERE cs.coupon_id = c.id AND cs.target_id = p.category_id
+        )
+        )
+
+        OR (
+        c.category = 3 AND EXISTS (
+        SELECT 1 FROM t_coupon_scope cs
+        WHERE cs.coupon_id = c.id AND cs.target_id = p.id
+        )
+        )
+        )
+        )
+
+        <choose>
+            <when test="sortField != null and sortField != ''">
+                ORDER BY
+                <choose>
+                    <when test="sortField == 'price'">p.price</when>
+                    <when test="sortField == 'salesCount'">p.sales_count</when>
+                    <when test="sortField == 'createTime'">p.create_time</when>
+                    <otherwise>p.sort_order</otherwise>
+                </choose>
+
+                <choose>
+                    <when test="sortOrder == 'asc' or sortOrder == 'ASC'">ASC</when>
+                    <otherwise>DESC</otherwise>
+                </choose>
+            </when>
+
+            <otherwise>
+                ORDER BY p.sort_order DESC, p.create_time DESC
+            </otherwise>
+        </choose>
+    </select>
+
+    <select id="selectDeletedPage" resultType="com.nxg.mall.common.vo.ProductManageVO">
+        SELECT
+        id,
+        name,
+        price,
+        main_image,
+        stock,
+        sales_count AS saleCount,
+        status = 1 AS isOnShelf,
+        update_time
+        FROM t_product
+        WHERE is_deleted = 1
+
+        <if test="query != null">
+            <if test="query.keyword != null and query.keyword != ''">
+                AND (
+                name LIKE CONCAT('%', #{query.keyword}, '%')
+                OR id LIKE CONCAT('%', #{query.keyword}, '%')
+                )
+            </if>
+
+            <if test="query.status != null">
+                <choose>
+                    <when test="query.status == 0">
+                        AND status = 1
+                    </when>
+                    <when test="query.status == 1">
+                        AND status = 0
+                    </when>
+                </choose>
+            </if>
+        </if>
+
+        ORDER BY update_time DESC
+    </select>
+
+    <select id="selectProductManagePage"
+            resultType="com.nxg.mall.common.vo.ProductManageVO">
+
+        SELECT
+        id,
+        name,
+        price,
+        main_image AS mainImage,
+        stock,
+        sales_count AS saleCount,
+        CASE WHEN status = 1 THEN true ELSE false END AS isOnShelf,
+        update_time AS updateTime
+        FROM t_product
+
+        <where>
+
+            <choose>
+                <when test="query.queryDeleted != null and query.queryDeleted">
+                    AND is_deleted = 1
+                </when>
+                <otherwise>
+                    AND is_deleted = 0
+                </otherwise>
+            </choose>
+
+            <if test="query.status != null">
+
+                <!-- 0-已下架 -->
+                <if test="query.status == 0">
+                    AND status = 0
+                </if>
+
+                <!-- 1-销售中 -->
+                <if test="query.status == 1">
+                    AND status = 1
+                </if>
+
+            </if>
+
+            <if test="query.keyword != null and query.keyword != ''">
+                AND (
+                name LIKE CONCAT('%', #{query.keyword}, '%')
+                OR id LIKE CONCAT('%', #{query.keyword}, '%')
+                )
+            </if>
+
+        </where>
+
+        ORDER BY sort_order DESC, update_time DESC
+
+    </select>
+
+    <select id="selectRelatedByOrderHistory" resultType="com.nxg.mall.common.vo.ProductListVO">
+        SELECT
+            p.id,
+            p.name,
+            p.main_image,
+            p.price,
+            p.sales_count
+        FROM t_product p
+                 JOIN t_order_item oi ON p.id = oi.product_id
+        WHERE oi.order_no IN (
+            -- 子查询：找到所有包含目标商品的订单号
+            SELECT order_no
+            FROM t_order_item
+            WHERE product_id = #{productId}
+        )
+          -- 排除当前商品自己
+          AND p.id != #{productId}
+          -- 确保商品处于上架状态且未被删除
+          AND p.status = 1
+          AND p.is_deleted = 0
+        -- 按共同购买的频率进行统计
+        GROUP BY p.id
+        ORDER BY COUNT(oi.id) DESC
+        LIMIT #{limit}
+    </select>
+</mapper>

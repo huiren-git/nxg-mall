@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+</head>
+<body>
+<div style="max-width: 600px; border: 1px solid #ddd; padding: 20px;">
+    <h2 style="color: #52c41a;">您的订单已发货！</h2>
+    <p>尊敬的 <strong th:text="${nickname}">用户</strong>，您好：</p>
+    <p>您的订单 <strong th:text="${orderNo}">ORDER_123</strong> 已经由仓库发出，正飞奔向您。</p>
+    <p>您可以登录商城个人中心，在“我的订单”中查看最新的物流状态。</p>
+    <p style="margin-top: 20px;">祝您购物愉快！</p>
+</div>
+</body>
+</html>
