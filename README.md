@@ -37,9 +37,9 @@ nxg/
 
 | 角色 | 演示内容 | 视频 |
 | --- | --- | --- |
-| Customer（顾客） | 登录、浏览商品、购物车、下单与支付等顾客端流程 | [观看顾客端演示](video/nxg-customer.mp4) |
-| Sales（销售） | 商品维护、订单处理与发货等销售端流程 | [观看销售端演示](video/nxg-sales.mp4) |
-| Admin（管理员） | 用户/订单管理、运营看板与数据分析等后台流程 | [观看管理员端演示](video/nxg-admin.mp4) |
+| Customer（顾客） | 登录、浏览商品、购物车、下单与支付等顾客端流程 | [观看顾客端演示](video/compressed/nxg-customer.mp4) |
+| Sales（销售） | 商品维护、订单处理与发货等销售端流程 | [观看销售端演示](video/compressed/nxg-sales.mp4) |
+| Admin（管理员） | 用户/订单管理、运营看板与数据分析等后台流程 | [观看管理员端演示](video/compressed/nxg-admin.mp4) |
 
 ## 运行前准备
 
