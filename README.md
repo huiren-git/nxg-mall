@@ -33,13 +33,23 @@ nxg/
 
 ## 角色功能演示视频
 
-以下视频位于项目根目录的 `video/` 文件夹，可用于快速了解三类角色的主要操作流程。
+### Customer（顾客端）
 
-| 角色 | 演示内容 | 视频 |
-| --- | --- | --- |
-| Customer（顾客） | 登录、浏览商品、购物车、下单与支付等顾客端流程 | [观看顾客端演示](video/compressed/nxg-customer.mp4) |
-| Sales（销售） | 商品维护、订单处理与发货等销售端流程 | [观看销售端演示](video/compressed/nxg-sales.mp4) |
-| Admin（管理员） | 用户/订单管理、运营看板与数据分析等后台流程 | [观看管理员端演示](video/compressed/nxg-admin.mp4) |
+登录、浏览商品、购物车、下单与支付等顾客端流程。
+
+https://github.com/user-attachments/assets/1f519673-6159-4004-9bba-779a827db574
+
+### Sales（销售端）
+
+商品维护、订单处理与发货等销售端流程。
+
+https://github.com/user-attachments/assets/9c7f74a3-7c5b-4225-b85f-207a516a4580
+
+### Admin（管理员端）
+
+用户、订单管理、运营看板与数据分析等后台流程。
+
+https://github.com/user-attachments/assets/bd1b1896-35eb-4b2d-ba3d-fb5079197229
 
 ## 运行前准备
 
